@@ -94,7 +94,7 @@ describe("OrbitWell app shell", () => {
     await user.click(screen.getByRole("button", { name: "Active astronaut" }));
     expect(screen.getByRole("heading", { name: "Log in" })).toBeInTheDocument();
     expect(screen.getByText("Log in to your Active astronaut account to continue.")).toBeInTheDocument();
-    expect(screen.getByRole("note")).toHaveTextContent("saved only in this browser");
+    expect(screen.getByText(/saved only in this browser/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Home" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Create an account" }));
@@ -147,6 +147,24 @@ describe("OrbitWell app shell", () => {
     await user.type(screen.getByLabelText("Agency"), "ESA");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
     expect(await screen.findByText("ESA")).toBeInTheDocument();
+  });
+
+  it("shows the matching public judge account for each stage", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    expect(await screen.findByRole("heading", { name: "Choose your mission stage" })).toBeInTheDocument();
+    const stages = [
+      ["Astronaut in Training", "testing@gmail.com", "orbitWell"],
+      ["Active astronaut", "htetshoongrace@gmail.com", "ZJ79.QP-Wnr5Ssu"],
+      ["Former astronaut", "thiri2@gmail.com", "abC123456@"],
+    ] as const;
+    for (const [stage, email, password] of stages) {
+      await user.click(screen.getByRole("button", { name: stage }));
+      const judgeDemo = screen.getByRole("note", { name: "Judge demo account" });
+      expect(judgeDemo).toHaveTextContent(email);
+      expect(judgeDemo).toHaveTextContent(password);
+      await user.click(screen.getByRole("button", { name: /Choose a different stage/ }));
+    }
   });
 
   it("only lets an account log in through its own stage card", async () => {

@@ -6,7 +6,11 @@ import type { LifeStage } from "../types/horizon";
 import { Brand } from "./AppShell";
 
 const STAGE_ICONS: Record<LifeStage, typeof Rocket> = { future: Rocket, active: Orbit, retired: Compass };
-const JUDGE_DEMO_ACCOUNT = { email: "testing@gmail.com", password: "orbitWell" };
+const JUDGE_DEMO_ACCOUNTS: Record<LifeStage, { email: string; password: string }> = {
+  future: { email: "testing@gmail.com", password: "orbitWell" },
+  active: { email: "htetshoongrace@gmail.com", password: "ZJ79.QP-Wnr5Ssu" },
+  retired: { email: "thiri2@gmail.com", password: "abC123456@" },
+};
 
 type Mode = "login" | "signup" | "complete";
 
@@ -53,17 +57,18 @@ function LoginForm({ stage, repository, onDone, onSignup }: { stage: LifeStage; 
     setBusy(false);
     if (result.account) onDone(result.account); else setError(result.error ?? "Log in failed.");
   };
+  const judgeDemoAccount = JUDGE_DEMO_ACCOUNTS[stage];
   return <section className="tech-card account-card" aria-labelledby="login-title">
     <h1 id="login-title">Log in</h1>
     <p className="page-lede">Log in to your {stageName(stage)} account to continue.</p>
-    {stage === "future" ? <aside className="judge-demo-account" role="note" aria-label="Judge demo account">
+    <aside className="judge-demo-account" role="note" aria-label="Judge demo account">
       <strong>Judge demo account</strong>
-      <p>Use these public demo credentials to explore OrbitWell as an astronaut in training.</p>
+      <p>Use these public demo credentials to explore OrbitWell as a {stageName(stage).toLowerCase()}.</p>
       <dl>
-        <div><dt>Email</dt><dd><code>{JUDGE_DEMO_ACCOUNT.email}</code></dd></div>
-        <div><dt>Password</dt><dd><code>{JUDGE_DEMO_ACCOUNT.password}</code></dd></div>
+        <div><dt>Email</dt><dd><code>{judgeDemoAccount.email}</code></dd></div>
+        <div><dt>Password</dt><dd><code>{judgeDemoAccount.password}</code></dd></div>
       </dl>
-    </aside> : null}
+    </aside>
     <form className="account-form" onSubmit={submit} noValidate>
       <TextField id="login-email" label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} />
       <TextField id="login-password" label="Password" type="password" autoComplete="current-password" value={password} onChange={setPassword} />
