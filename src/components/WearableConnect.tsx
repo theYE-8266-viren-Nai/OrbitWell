@@ -1,0 +1,72 @@
+import { Bluetooth, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { bodyDevicesForStage, bodyDeviceTiming, type BodyDeviceId } from "../domain/bodyDevices";
+import type { LifeStage } from "../types/horizon";
+
+/**
+ * "Connect wearables": one button that opens the device list every time, like a phone's Bluetooth
+ * screen. Opening it scans briefly for nearby devices; each device can then be paired or disconnected.
+ * `on` / `onToggle` are accepted for compatibility with existing callers and are not needed any more.
+ */
+// Whether the currently open list has already shown its "searching" step. Module-level, because the header remounts this
+// component when the first device pairs; without it the list would search again after every pairing.
+let searchedWhileOpen = false;
+
+export function WearableConnect({ stage = "active", open, paired, pairing, onOpenChange, onPair, onUnpair }: {
+  stage?: LifeStage;
+  on?: boolean;
+  open: boolean;
+  paired: ReadonlySet<BodyDeviceId>;
+  pairing: BodyDeviceId | null;
+  onToggle?: (on: boolean) => void;
+  onOpenChange: (open: boolean) => void;
+  onPair: (id: BodyDeviceId) => void;
+  onUnpair: (id: BodyDeviceId) => void;
+}) {
+  const devices = bodyDevicesForStage(stage);
+  const pairedCount = devices.filter((device) => paired.has(device.id)).length;
+  const root = useRef<HTMLDivElement>(null);
+  const [scanning, setScanning] = useState(() => open && !searchedWhileOpen);
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => { if (root.current && !root.current.contains(event.target as Node)) onOpenChange(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") onOpenChange(false); };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
+  }, [open, onOpenChange]);
+  // Each time the list opens, show a short "searching" step before the devices appear.
+  useEffect(() => {
+    if (!open) { searchedWhileOpen = false; setScanning(false); return; }
+    if (searchedWhileOpen) { setScanning(false); return; }
+    setScanning(true);
+    const timer = window.setTimeout(() => { searchedWhileOpen = true; setScanning(false); }, bodyDeviceTiming.scanMs);
+    return () => window.clearTimeout(timer);
+  }, [open]);
+  const connected = pairedCount > 0;
+
+  return <div className="wearable-connect" ref={root}>
+    <button type="button" className="wearable-connect-button" data-connected={connected || undefined} aria-expanded={open} aria-controls="wearable-list" onClick={() => onOpenChange(!open)}>
+      <span className="wearable-connect-icon" aria-hidden="true"><Bluetooth size={15} /></span>
+      <span>Connect wearables</span>
+      {connected ? <span className="wearable-connect-count">{pairedCount}/{devices.length}</span> : null}
+      <ChevronDown size={15} className="wearable-connect-chevron" aria-hidden="true" />
+    </button>
+    {open ? <div id="wearable-list" className="wearable-dropdown" role="region" aria-label="Available wearables">
+      {scanning ? <p className="wearable-scanning" role="status"><span className="wearable-scan-dot" aria-hidden="true" />Searching for nearby devices…</p> : <>
+      <p className="wearable-dropdown-title">{pairedCount ? `${pairedCount} of ${devices.length} paired` : "Available devices"}</p>
+      <ul className="wearable-list">{devices.map((device) => {
+        const isPaired = paired.has(device.id);
+        const isPairing = pairing === device.id;
+        return <li key={device.id} className="wearable-item" data-paired={isPaired || undefined}>
+          <span className="wearable-dot" aria-hidden="true" />
+          <div className="wearable-text" title={`${device.worn} · ${device.measures}`}><p className="wearable-name">{device.name}</p><p className="wearable-meta">Body parts: {device.parts.join(", ")}</p></div>
+          {isPaired
+            ? <button type="button" className="wearable-action" aria-label={`Disconnect ${device.name}`} onClick={() => onUnpair(device.id)}>Connected</button>
+            : <button type="button" className="wearable-action wearable-action-pair" aria-label={`Pair ${device.name}`} disabled={Boolean(pairing)} onClick={() => onPair(device.id)}>{isPairing ? "Pairing…" : "Pair"}</button>}
+        </li>;
+      })}</ul>
+      </>}
+    </div> : null}
+  </div>;
+}
