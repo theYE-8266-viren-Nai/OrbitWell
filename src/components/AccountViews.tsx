@@ -6,6 +6,7 @@ import type { LifeStage } from "../types/horizon";
 import { Brand } from "./AppShell";
 
 const STAGE_ICONS: Record<LifeStage, typeof Rocket> = { future: Rocket, active: Orbit, retired: Compass };
+const JUDGE_DEMO_ACCOUNT = { email: "testing@gmail.com", password: "orbitWell" };
 
 type Mode = "login" | "signup" | "complete";
 
@@ -55,6 +56,14 @@ function LoginForm({ stage, repository, onDone, onSignup }: { stage: LifeStage; 
   return <section className="tech-card account-card" aria-labelledby="login-title">
     <h1 id="login-title">Log in</h1>
     <p className="page-lede">Log in to your {stageName(stage)} account to continue.</p>
+    {stage === "future" ? <aside className="judge-demo-account" role="note" aria-label="Judge demo account">
+      <strong>Judge demo account</strong>
+      <p>Use these public demo credentials to explore OrbitWell as an astronaut in training.</p>
+      <dl>
+        <div><dt>Email</dt><dd><code>{JUDGE_DEMO_ACCOUNT.email}</code></dd></div>
+        <div><dt>Password</dt><dd><code>{JUDGE_DEMO_ACCOUNT.password}</code></dd></div>
+      </dl>
+    </aside> : null}
     <form className="account-form" onSubmit={submit} noValidate>
       <TextField id="login-email" label="Email" type="email" autoComplete="email" value={email} onChange={setEmail} />
       <TextField id="login-password" label="Password" type="password" autoComplete="current-password" value={password} onChange={setPassword} />

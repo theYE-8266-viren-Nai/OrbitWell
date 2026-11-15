@@ -85,6 +85,12 @@ describe("OrbitWell app shell", () => {
     expect(screen.queryByRole("button", { name: /Create your astronaut account/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Log in" })).not.toBeInTheDocument();
 
+    await user.click(screen.getByRole("button", { name: "Astronaut in Training" }));
+    const judgeDemo = screen.getByRole("note", { name: "Judge demo account" });
+    expect(judgeDemo).toHaveTextContent("testing@gmail.com");
+    expect(judgeDemo).toHaveTextContent("orbitWell");
+    await user.click(screen.getByRole("button", { name: /Choose a different stage/ }));
+
     await user.click(screen.getByRole("button", { name: "Active astronaut" }));
     expect(screen.getByRole("heading", { name: "Log in" })).toBeInTheDocument();
     expect(screen.getByText("Log in to your Active astronaut account to continue.")).toBeInTheDocument();
