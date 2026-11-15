@@ -153,7 +153,7 @@ Horizon is a research demo health companion for space travelers. It uses synthet
 
 ### 🟢 Currently Built — Chat Assistant
 
-- **Floating NASA assistant:** `ChatWidget` is mounted on every selected-stage page, keeps the existing accessible floating robot, and presents NASA-focused starter questions in a mobile-friendly sheet.
+- **Floating space research assistant:** `ChatWidget` is mounted on every selected-stage page, keeps the existing accessible floating robot, and presents NASA-focused starter questions in a mobile-friendly sheet. The visible branding is ORBIT/OrbitWell; it does not imply NASA ownership or endorsement.
 - **NASA-only contract:** Dashboard-context sharing and general symptom-first cloud chat were removed. ORBIT answers only from retrieved official NASA passages and displays the exact no-evidence message when the index cannot support an answer.
 - **Retired private companion:** Retired Home starts with one wearable pairing action. After pairing it shows a Mental friend card and wearable information. ORBIT starts in a private built-in conversation for Retired astronauts; switching to NASA research is explicit. Private messages stay in browser session memory and are never uploaded. A local warm reply is a fixed prompt, not clinical support.
 - **Brief replies:** Visible guidance is capped at 30 words and longer fixed guidance sits under “More guidance”. The NASA cloud prompt requests up to 30 words, with server and browser checks enforcing 250 characters and three lines. The Edge Function edit requires deployment before the new prompt is live.

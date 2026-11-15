@@ -1,6 +1,6 @@
-# ORBIT · NASA Research Assistant
+# ORBIT · Space Research Assistant
 
-ORBIT is Horizon's floating NASA research assistant for Future and Active workspaces. Retired astronauts start in a private, built-in conversation about life after flight and can explicitly switch to NASA research. NASA answers come from an indexed set of official public NASA sources. ORBIT is not a doctor, emergency service, mission authority, or substitute for qualified crew, medical, engineering, or flight-control teams.
+ORBIT is OrbitWell's floating space research assistant for Future and Active workspaces. Retired astronauts start in a private, built-in conversation about life after flight and can explicitly switch to space research. Answers about NASA topics come from an indexed set of official public NASA sources. ORBIT is not a doctor, emergency service, mission authority, or substitute for qualified crew, medical, engineering, or flight-control teams.
 
 ## User workflow
 
@@ -37,7 +37,7 @@ control, and the crew medic always take priority. ORBIT is only a visible
 reminder and research assistant; it cannot call anyone, issue mission commands,
 or replace the approved emergency procedure.
 
-After that warning, the user may choose **Ask NASA about this topic**. ORBIT shows a neutral research question, such as “What does NASA documentation report about respiratory concerns during human spaceflight?” Nothing is sent until the user confirms. Only that sanitized question is uploaded and persisted.
+After that warning, the user may choose **Ask ORBIT about this topic**. ORBIT shows a neutral research question, such as “What does NASA documentation report about respiratory concerns during human spaceflight?” Nothing is sent until the user confirms. Only that sanitized question is uploaded and persisted.
 
 Educational questions such as “How does NASA study breathing changes in spaceflight?” or “What has NASA learned about radiation beyond low Earth orbit?” are treated as research questions, not personal emergencies.
 

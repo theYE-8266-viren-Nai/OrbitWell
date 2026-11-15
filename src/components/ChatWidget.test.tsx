@@ -13,11 +13,11 @@ const reply = { id: "reply", role: "assistant" as const, content: "Microgravity 
 async function open() {
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Open ORBIT assistant" }));
-  await waitFor(() => expect(screen.queryByText("Loading saved NASA research…")).not.toBeInTheDocument());
+  await waitFor(() => expect(screen.queryByText("Loading saved space research…")).not.toBeInTheDocument());
   return user;
 }
 
-describe("ORBIT NASA research assistant", () => {
+describe("ORBIT space research assistant", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mock.listConversations.mockResolvedValue({ data: [], warning: "Cloud chat is unavailable." });
@@ -33,10 +33,10 @@ describe("ORBIT NASA research assistant", () => {
     expect(screen.getByRole("textbox", { name: "NASA research question" })).toBeInTheDocument();
   });
 
-  it("opens accessibly as a NASA research assistant", async () => {
+  it("opens accessibly as a space research assistant", async () => {
     render(<ChatWidget {...props} />); const user = await open();
     expect(screen.getByRole("dialog", { name: "ORBIT AI" })).toBeInTheDocument();
-    expect(screen.getByText("NASA RESEARCH ASSISTANT")).toBeInTheDocument();
+    expect(screen.getByText("SPACE RESEARCH ASSISTANT")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "NASA research question" })).toHaveFocus();
     expect(screen.getByRole("button", { name: /Health in space/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "I'm not feeling well" })).not.toBeInTheDocument();
@@ -115,7 +115,7 @@ describe("ORBIT NASA research assistant", () => {
     await user.click(screen.getByRole("button", { name: "Send question" }));
     expect(screen.getByRole("log")).toHaveTextContent("Contact your crew medic and mission control now");
     expect(mock.sendMessage).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: /Ask NASA about this topic/i }));
+    await user.click(screen.getByRole("button", { name: /Ask ORBIT about this topic/i }));
     expect(screen.getByRole("group", { name: "Confirm sanitized NASA research question" })).toHaveTextContent("respiratory concerns during human spaceflight");
     await user.click(screen.getByRole("button", { name: "Send sanitized question" }));
     await waitFor(() => expect(mock.sendMessage).toHaveBeenCalledWith("conversation", "active", "What does NASA documentation report about respiratory concerns during human spaceflight?", { category: "health_human_spaceflight", sanitizedFromTopic: "breathing" }));
@@ -184,7 +184,7 @@ describe("ORBIT NASA research assistant", () => {
     expect(mock.createConversation).not.toHaveBeenCalled();
     expect(mock.sendMessage).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Explore NASA research" }));
-    expect(screen.getByText("NASA RESEARCH ASSISTANT")).toBeInTheDocument();
+    expect(screen.getByText("SPACE RESEARCH ASSISTANT")).toBeInTheDocument();
     expect(screen.queryByText("What part of seeing Earth feels most present today?")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Return to private chat" }));
     expect(screen.getByRole("log")).toHaveTextContent("What part of seeing Earth feels most present today?");

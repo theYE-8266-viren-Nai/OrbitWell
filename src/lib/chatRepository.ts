@@ -68,5 +68,5 @@ function friendlyChatError(code: unknown): string {
   if (value === "rate_limited") return "ORBIT is receiving many questions right now. Please wait a minute and try again.";
   if (value === "nasa_index_unavailable" || value === "embedding_unavailable") return "NASA research sources are temporarily unavailable. Please try again shortly.";
   if (value === "urgent_confirmation_required") return "Please use the urgent guidance first and confirm the neutral NASA research question before sending it.";
-  return "NASA research chat could not be completed. No unsourced answer was generated.";
+  return "Space research chat could not be completed. No unsourced answer was generated.";
 }
