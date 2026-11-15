@@ -35,7 +35,7 @@ npm run setup:pose -- --yes
    "Body tracking is ready". If you see "Body tracking is not available here", the files are missing or could not load
    and the motion-based check is used instead.
 
-`public/mediapipe/` is about 34 MB (29 MB of it is the `wasm/` folder) and is git-ignored, so it is never committed by accident. Anyone who clones the repo runs the setup command above. A deployed copy of the app only gets body tracking if these files are present there too.
+`public/mediapipe/` is about 34 MB (29 MB of it is the `wasm/` folder) and is committed to the repository (the largest single file is 14.7 MB), so a clone or a deployed copy of the app has body tracking with no setup step. The setup command above is only needed to refresh the files or to move to a newer version. See `public/mediapipe/NOTICE.md` for sources and licences.
 
 ## Webcam trial checklist
 
