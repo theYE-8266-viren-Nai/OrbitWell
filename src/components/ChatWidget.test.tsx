@@ -26,6 +26,13 @@ describe("ORBIT NASA research assistant", () => {
     mock.sendMessage.mockResolvedValue({ data: reply });
   });
 
+  it("is text only: there is no voice button or voice message anywhere in the panel", async () => {
+    render(<ChatWidget {...props} />); await open();
+    expect(screen.queryByRole("button", { name: /voice|listening/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/voice/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "NASA research question" })).toBeInTheDocument();
+  });
+
   it("opens accessibly as a NASA research assistant", async () => {
     render(<ChatWidget {...props} />); const user = await open();
     expect(screen.getByRole("dialog", { name: "ORBIT AI" })).toBeInTheDocument();
@@ -42,7 +49,7 @@ describe("ORBIT NASA research assistant", () => {
     render(<ChatWidget {...props} />); const user = await open();
     await user.click(screen.getByRole("button", { name: /Mission support/i }));
     expect(await screen.findByText(/Microgravity changes vestibular inputs/)).toBeInTheDocument();
-    expect(mock.sendMessage).toHaveBeenCalledWith("conversation", "active", "Why does the ISS use control moment gyroscopes?", { category: "missions_engineering", inputMode: "text", sanitizedFromTopic: undefined });
+    expect(mock.sendMessage).toHaveBeenCalledWith("conversation", "active", "Why does the ISS use control moment gyroscopes?", { category: "missions_engineering", sanitizedFromTopic: undefined });
   });
 
   it("keeps suggested questions available after the first question, without repeating it", async () => {

@@ -16,7 +16,7 @@ Visible replies show at most 30 words in 1–3 short lines, with longer fixed gu
 
 The assistant does not share dashboard readings. NASA research chats are stored by life stage in the owner's Supabase session. Retired private conversation stays in browser session memory and is not sent to cloud AI or saved to the account.
 
-## FAQ categories and voice
+## FAQ categories
 
 The panel groups starter questions by the selected stage: health and human
 spaceflight, Future preparation, Active mission support, Retired follow-up,
@@ -24,22 +24,9 @@ missions and engineering, and NASA science topics. These cards only help users
 find a question; every factual answer still requires evidence from the NASA
 index. The selected stage changes examples and suggested Horizon destinations,
 not the evidence standard, and personal readings or private notes are never
-included in a text or voice request.
+included in a request.
 
-Optional browser push-to-talk voice uses Vapi as an input/output layer. It must
-be configured with the public client values below; no OpenRouter or Supabase
-service key belongs in a `VITE_` variable:
-
-```text
-VITE_VAPI_PUBLIC_KEY
-VITE_VAPI_ASSISTANT_ID
-```
-
-The Vapi assistant must be configured to call the same server-side ORBIT chat
-tool/endpoint and speak only its validated `answer`. Without those values, text
-chat remains available and the panel honestly reports that voice is unavailable.
-Voice uses the same NASA retrieval, citation, emergency, and no-evidence rules;
-it is not a second answer engine.
+ORBIT is text only: there is no voice input or spoken reply, and no voice service or `VITE_` voice setting is needed.
 
 ## Urgent-language boundary
 

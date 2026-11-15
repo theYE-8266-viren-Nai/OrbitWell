@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowUpRight, BookOpen, CheckCircle2, CircleAlert, CircleHelp, Mic, Phone, Send, ShieldCheck, Square, X } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, BookOpen, CheckCircle2, CircleAlert, CircleHelp, Phone, Send, ShieldCheck, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { LifeStage } from "../types/horizon";
@@ -8,7 +8,6 @@ import { forEarth, getUrgentSupport, type EmergencySupport, type EmergencyTopic 
 import { sanitizedNasaQuery } from "../../supabase/functions/_shared/nasaGrounding";
 import { classifyOrbitQuestion, faqsForStage, resourcesForCategory } from "../domain/orbitFaq";
 import { RobotAvatar } from "./RobotAvatar";
-import { useVapiOrbit } from "../lib/useVapiOrbit";
 
 const RETIRED_SUGGESTIONS = ["I miss the view of Earth", "Life after the mission feels different", "I want to reconnect with people"];
 const localMessage = (content: string, support?: EmergencySupport): ChatMessage => ({ id: crypto.randomUUID(), role: "assistant", content, createdAt: new Date().toISOString(), status: "complete", source: "built-in", answerKind: support ? "urgent_warning" : "unavailable", supportTopic: support?.topic, details: support?.details, resources: support?.resources });
@@ -73,7 +72,6 @@ export function ChatWidget({ stage, client, userId, avatarSrc, openRequest }: { 
   const visibleMessages = privateMode ? privateMessages : messages;
   const faqs = faqsForStage(stage ?? "future");
   const onEarth = stage !== "active";
-  const voice = useVapiOrbit((transcript) => { void send(transcript, "voice"); });
 
   useEffect(() => {
     epoch.current += 1; requestSequence.current += 1; supportRef.current = undefined;
@@ -106,11 +104,11 @@ export function ChatWidget({ stage, client, userId, avatarSrc, openRequest }: { 
   const close = () => { setOpen(false); launcher.current?.focus(); };
   const leaveUrgentMode = () => { supportRef.current = undefined; setSupportTopic(undefined); setPendingResearch(undefined); setInput(""); question.current?.focus(); };
 
-  const sendCloud = async (trimmed: string, options: { sanitizedFromTopic?: EmergencyTopic; inputMode?: "text" | "voice" } = {}) => {
+  const sendCloud = async (trimmed: string, options: { sanitizedFromTopic?: EmergencyTopic } = {}) => {
     if (!trimmed || trimmed.length > 2_000 || sending.current || loading) return;
     const version = epoch.current; const request = ++requestSequence.current; const isCurrent = () => version === epoch.current && request === requestSequence.current;
     sending.current = true; setBusy(true); setWarning(undefined);
-    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: "user", content: trimmed, createdAt: new Date().toISOString(), status: "complete", sanitizedQuery: options.sanitizedFromTopic ? trimmed : undefined, inputMode: options.inputMode ?? "text" };
+    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: "user", content: trimmed, createdAt: new Date().toISOString(), status: "complete", sanitizedQuery: options.sanitizedFromTopic ? trimmed : undefined, inputMode: "text" };
     setMessages((current) => [...current, userMessage]);
     try {
       let id = conversationId;
@@ -125,13 +123,12 @@ export function ChatWidget({ stage, client, userId, avatarSrc, openRequest }: { 
       setWarning(result.warning ?? result.error);
       const reply = result.data ?? localMessage(offlineChatReply(null, trimmed));
       setMessages((current) => [...current, reply]);
-      if (options.inputMode === "voice" && (voice.state === "listening" || voice.state === "thinking" || voice.state === "speaking")) voice.speak(result.data ? reply.content : result.error ?? reply.content);
     } catch {
       if (isCurrent()) { setWarning("NASA research chat is unavailable; no unsourced answer was generated."); setMessages((current) => [...current, localMessage(offlineChatReply(null, trimmed))]); }
     } finally { if (isCurrent()) { sending.current = false; setBusy(false); } }
   };
 
-  const send = async (text = input, inputMode: "text" | "voice" = "text") => {
+  const send = async (text = input) => {
     const trimmed = text.trim(); if (!trimmed || trimmed.length > 2_000) return;
     const detected = getUrgentSupport(trimmed, supportRef.current);
     // Future trainees and Retired astronauts are on Earth: emergency services come first, not a crew medic.
@@ -143,11 +140,11 @@ export function ChatWidget({ stage, client, userId, avatarSrc, openRequest }: { 
         setPrivateMessages((current) => [...current, { id: crypto.randomUUID(), role: "user", content: trimmed, createdAt: new Date().toISOString(), status: "complete" }, localMessage(offlineChatReply("retired", trimmed))]);
         return;
       }
-      await sendCloud(trimmed, { inputMode }); return;
+      await sendCloud(trimmed); return;
     }
     requestSequence.current += 1; sending.current = false; setBusy(false); setInput("");
     supportRef.current = safety.topic; setSupportTopic(safety.topic); setPendingResearch(undefined);
-    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: "user", content: trimmed, createdAt: new Date().toISOString(), status: "complete", inputMode };
+    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: "user", content: trimmed, createdAt: new Date().toISOString(), status: "complete", inputMode: "text" };
     const append = privateMode ? setPrivateMessages : setMessages;
     append((current) => [...current, userMessage, localMessage(safety.content, safety)]);
   };
@@ -196,7 +193,7 @@ export function ChatWidget({ stage, client, userId, avatarSrc, openRequest }: { 
         {supportTopic ? <div className="chat-followups" aria-label="Urgent guidance options"><button type="button" onClick={leaveUrgentMode}>Return to {privateMode ? "private chat" : "NASA research"}</button><button type="button" className="chat-followup-secondary" onClick={() => setPendingResearch({ topic: supportTopic, query: sanitizedNasaQuery(supportTopic) })}><BookOpen size={13} aria-hidden="true" />Ask NASA about this topic</button></div> : null}
         {pendingResearch ? <div className="chat-research-confirm" role="group" aria-label="Confirm sanitized NASA research question"><p>Your personal message stays in this browser session. Send this neutral research question instead?</p><blockquote>{pendingResearch.query}</blockquote><div><button type="button" className="btn-primary" onClick={() => void confirmResearch()}>Send sanitized question</button><button type="button" className="btn-secondary" onClick={() => setPendingResearch(undefined)}>Cancel</button></div></div> : null}
       </div>
-      <div className="chat-controls"><div className="chat-composer-topline"><button className="chat-urgent-shortcut" type="button" onClick={() => void send("I need help now")}><AlertTriangle size={13} aria-hidden="true" />I need urgent help</button>{!privateMode ? <button type="button" className="chat-voice-button" disabled={!voice.available || busy} onClick={() => voice.state === "listening" ? voice.stop() : void voice.start()}>{voice.state === "listening" ? <Square size={13} /> : <Mic size={13} />} {voice.state === "unavailable" ? "Voice unavailable" : voice.state === "listening" ? "Stop listening" : "Ask by voice"}</button> : null}<details className="chat-options"><summary>Chat privacy</summary><p className="chat-privacy">{stage === "retired" ? "Private conversation stays in this browser session. If you switch to NASA research, those questions and answers may be saved to your account. Urgent personal messages are never sent automatically." : "NASA questions and grounded answers may be saved to your account. Urgent personal messages stay in this browser session and are never sent unless you confirm the neutral research rewrite."}</p></details></div>{voice.error ? <p className="chat-warning" role="status">{voice.error}</p> : null}{warning ? <p className="chat-warning" role="status">{warning}</p> : null}<form onSubmit={(event) => { event.preventDefault(); void send(); }}><input ref={question} value={input} maxLength={2_000} onChange={(event) => setInput(event.target.value)} placeholder={privateMode ? "Share what's on your mind…" : "Ask a NASA, space or health question…"} aria-label={privateMode ? "Private message" : "NASA research question"} /><button type="submit" aria-label="Send question" disabled={!input.trim() || busy || loading}><Send size={17} /></button></form></div>
+      <div className="chat-controls"><div className="chat-composer-topline"><button className="chat-urgent-shortcut" type="button" onClick={() => void send("I need help now")}><AlertTriangle size={13} aria-hidden="true" />I need urgent help</button><details className="chat-options"><summary>Chat privacy</summary><p className="chat-privacy">{stage === "retired" ? "Private conversation stays in this browser session. If you switch to NASA research, those questions and answers may be saved to your account. Urgent personal messages are never sent automatically." : "NASA questions and grounded answers may be saved to your account. Urgent personal messages stay in this browser session and are never sent unless you confirm the neutral research rewrite."}</p></details></div>{warning ? <p className="chat-warning" role="status">{warning}</p> : null}<form onSubmit={(event) => { event.preventDefault(); void send(); }}><input ref={question} value={input} maxLength={2_000} onChange={(event) => setInput(event.target.value)} placeholder={privateMode ? "Share what's on your mind…" : "Ask a NASA, space or health question…"} aria-label={privateMode ? "Private message" : "NASA research question"} /><button type="submit" aria-label="Send question" disabled={!input.trim() || busy || loading}><Send size={17} /></button></form></div>
     </section> : null}
   </>;
 }

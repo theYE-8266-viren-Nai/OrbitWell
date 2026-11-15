@@ -32,13 +32,13 @@ export function createChatRepository(client: SupabaseClient | null, userId: stri
         ? { ...message, content: "Older reply hidden. Ask again for a short answer.\nFor medical concerns, contact your crew medic.", source: "built-in" as const }
         : message), warning: result.error?.message };
     },
-    async sendMessage(conversationId: string, stage: LifeStage, message: string, options: { sanitizedFromTopic?: EmergencyTopic; category?: OrbitFaqCategory; inputMode?: "text" | "voice" } = {}): Promise<ChatSendResult> {
+    async sendMessage(conversationId: string, stage: LifeStage, message: string, options: { sanitizedFromTopic?: EmergencyTopic; category?: OrbitFaqCategory } = {}): Promise<ChatSendResult> {
       const builtIn = (content: string): ChatMessage => ({ id: crypto.randomUUID(), role: "assistant", content, createdAt: new Date().toISOString(), status: "complete", source: "built-in", answerKind: "unavailable" });
       const safety = getUrgentSupport(message);
       if (safety && !options.sanitizedFromTopic) return { data: { ...builtIn(safety.content), answerKind: "urgent_warning", supportTopic: safety.topic, details: safety.details, resources: safety.resources }, warning: "Urgent guidance. This exchange was not sent to cloud AI or saved remotely." };
       if (!client || !userId) return { data: builtIn(offlineChatReply(null, message)), warning: unavailable };
       const requestId = crypto.randomUUID();
-      const result = await client.functions.invoke("chat-assistant", { body: { conversationId, stage, message, sanitizedFromTopic: options.sanitizedFromTopic, category: options.category, inputMode: options.inputMode ?? "text", requestId } });
+      const result = await client.functions.invoke("chat-assistant", { body: { conversationId, stage, message, sanitizedFromTopic: options.sanitizedFromTopic, category: options.category, inputMode: "text", requestId } });
       if (result.error || !result.data?.message) {
         // A non-2xx reply leaves result.data empty; the function's error code is in the response body.
         let code: unknown = result.data?.error ?? result.data?.detail;

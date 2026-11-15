@@ -27,6 +27,12 @@ describe("chat response boundary", () => {
     expect(invoke).toHaveBeenCalledWith("chat-assistant", { body: expect.objectContaining({ sanitizedFromTopic: "breathing" }) });
     expect(JSON.stringify(invoke.mock.calls)).not.toContain("I'm having trouble breathing");
   });
+  it("always sends questions to the cloud as text, since ORBIT has no voice input", async () => {
+    const invoke = vi.fn().mockResolvedValue({ data: { message: { id: "a", role: "assistant", content: "NASA studies bone loss in flight. [1]", created_at: "2026-11-15", status: "complete", answer_kind: "nasa_grounded" } } });
+    const repository = createChatRepository({ functions: { invoke } } as unknown as SupabaseClient, "user");
+    await repository.sendMessage("conversation", "active", "How does microgravity affect bones?");
+    expect(invoke).toHaveBeenCalledWith("chat-assistant", { body: expect.objectContaining({ inputMode: "text" }) });
+  });
   it("also filters unsafe historical assistant messages while preserving user messages", async () => {
     const result = { data: [
       { id: "1", role: "user", content: "Insulin?", created_at: "2026-11-13" },
