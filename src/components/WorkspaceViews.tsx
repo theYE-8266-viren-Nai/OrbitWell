@@ -16,7 +16,7 @@ import type { PreparationRepository } from "../lib/preparationRepository";
 import { useDevice } from "../lib/deviceContext";
 import { WellbeingCheckIn } from "./WellbeingCheckIn";
 import { WearableConnect } from "./WearableConnect";
-import { bodyDevicesForStage, metricFromPairedDevice, type BodyDeviceId } from "../domain/bodyDevices";
+import { bodyDevicesForStage, metricFromPairedDevice } from "../domain/bodyDevices";
 import { astronautRecord, initials } from "../data/astronautProfiles";
 import { displayValue, initialsOf, profileGroups, validateProfile, type AstronautProfile } from "../domain/astronautAccount";
 import type { Account } from "../lib/accountRepository";
@@ -170,13 +170,13 @@ export function TrendsView({ stage = "active", metrics, alert, dataQuality, load
   const wearables = useDevice()?.bodyDevices;
   const pairedDevices = wearables?.paired;
   const stageDevices = bodyDevicesForStage(stage);
-  const pairingReady = !wearables || pairedDevices === undefined || pairedDevices.size >= stageDevices.length;
+  // Charts follow whatever is paired; no need to pair every device first.
   const paired = pairedDevices;
   const visibleMetrics = retired
     ? [...metrics.filter((metric) => metric.metric !== "radiation_dose" && metric.metric !== "core_temperature"), ...retiredActivityTrends]
     : paired ? metrics.filter((metric) => metricFromPairedDevice(metric.metric, paired)) : metrics;
   const pairedNames = paired ? stageDevices.filter((item) => paired.has(item.id)).map((item) => item.name) : [];
-  const deviceNote = pairingReady && paired && pairedNames.length ? <><p className="trend-device-note" role="note">Showing charts from: {pairedNames.join(", ")}.</p>{!visibleMetrics.length ? <p className="trend-device-note" role="note">Motion sensor readings appear on the Legs and Back of the body in Home; they have no trend chart.</p> : null}</> : null;
+  const deviceNote = paired && pairedNames.length ? <><p className="trend-device-note" role="note">Showing charts from: {pairedNames.join(", ")}.{pairedNames.length < stageDevices.length ? " Connect more wearables to see other signals." : ""}</p>{!visibleMetrics.length ? <p className="trend-device-note" role="note">Motion sensor readings appear on the Legs and Back of the body in Home; they have no trend chart.</p> : null}</> : null;
   const trendContent = alert ? <section className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4" aria-labelledby="trend-alert-title"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">Alert marker</p><h2 id="trend-alert-title" className="mt-1 text-lg font-semibold text-white">A signal needs review</h2></div><button type="button" aria-expanded={alertOpen} aria-controls="trend-alert-reason" onClick={() => setAlertOpen((open) => !open)} className="rounded-xl border border-amber-200/40 px-3 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-200/10">{alertOpen ? "Hide reason" : "Show alert reason"}</button></div>{alertOpen ? <p id="trend-alert-reason" className="mt-4 max-w-3xl text-sm leading-6 text-amber-50">{alert.reason}</p> : null}</section> : null;
   const readyContent = <>
     {trendContent}
@@ -199,27 +199,9 @@ export function TrendsView({ stage = "active", metrics, alert, dataQuality, load
         {retired ? null : <DeviceBadge />}
       </div>
     </header>
-    {loading ? <LoadingPanel /> : dataUnavailable ? <DataNotice title="Trends are unavailable" body="The simulated source is disconnected. Reconnect it from Profile to resume the trend view." /> : !pairingReady ? <TrendPairingGate stage={stage} paired={pairedDevices} onViewChange={onViewChange} /> : <DeviceIdleGate stage={stage} connectAbove={Boolean(wearables)}>{readyContent}</DeviceIdleGate>}
+    {loading ? <LoadingPanel /> : dataUnavailable ? <DataNotice title="Trends are unavailable" body="The simulated source is disconnected. Reconnect it from Profile to resume the trend view." /> : <DeviceIdleGate stage={stage} connectAbove={Boolean(wearables)}>{readyContent}</DeviceIdleGate>}
     {loading ? null : <DataTrustStrip />}
   </div>;
-}
-
-function TrendPairingGate({ stage, paired, onViewChange }: { stage: LifeStage; paired?: ReadonlySet<BodyDeviceId>; onViewChange?: (view: ViewName) => void }) {
-  const devices = bodyDevicesForStage(stage);
-  const connected = devices.filter((device) => paired?.has(device.id));
-  const missing = devices.filter((device) => !paired?.has(device.id));
-  return <section className={`${panelClass} trend-pairing-gate`} aria-labelledby="trend-pairing-title">
-    <Bluetooth size={28} aria-hidden="true" />
-    <div>
-      <p className="eyebrow">COMPLETE DEVICE SET</p>
-      <h2 id="trend-pairing-title">Complete wearable pairing to view trends</h2>
-      <p className="trend-pairing-progress">{connected.length} of {devices.length} devices connected</p>
-      <p className="panel-note">Connect the remaining devices to build a complete personal trend baseline.</p>
-      <ul className="trend-pairing-list" aria-label="Remaining wearables">{missing.map((device) => <li key={device.id}>{device.name}</li>)}</ul>
-      <p className="trend-pairing-help">Use Connect wearables above to finish pairing.</p>
-      {onViewChange ? <button type="button" className="btn-primary trend-pairing-action" onClick={() => onViewChange("home")}>Go to Home to connect wearables <ArrowRight size={16} aria-hidden="true" /></button> : null}
-    </div>
-  </section>;
 }
 
 const MONTHLY_LABELS: Record<string, string> = { heart_rate: "Resting heart rate", hrv: "HRV", spo2: "SpO₂", sleep_hours: "Sleep", skin_temperature: "Skin temperature", radiation_dose: "Radiation dose" };
